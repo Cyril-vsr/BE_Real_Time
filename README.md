@@ -8,3 +8,8 @@ Depot du projet de temps reel 4eme année au departement GEI de l'INSA Toulouse.
 - doc: contient les sujets de TD et TP
 - aruco_markers: Script de generation des tags (aruco) utilisés sur les robots
 
+# Real_Time_BE
+BE for the real time course at INSA
+
+
+Link to Diagram : https://app.diagrams.net/#G1cOXsQIVWAtuiLikTjfOiLHGdSUx2KLgQ#%7B%22pageId%22%3A%22awDo0xh2j07cilMKjcz5%22%7D
