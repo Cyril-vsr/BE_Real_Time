@@ -384,6 +384,55 @@ void Tasks::MoveTask(void *arg) {
 }
 
 /**
+ * @brief Thread handling control of the camera.
+ */
+void Tasks::ControlCamera(void *arg) {
+    int status=0;
+    Img Image = NULL;
+    rt_task_set_periodic(NULL, TM_NOW, 100000000);
+    cout << "Start Camera Operating" << endl << flush;
+    
+    /**************************************************************************************/
+    /* The task starts here                                                               */
+    /**************************************************************************************/
+    while (1) {
+        Message * msgSend;
+        MessageImg * ImageSend;
+        
+        rt_mutex_acquire(&mutex_order_openCamera, TM_INFINITE);
+        if (MESSAGE_CAM_IMAGE == 1)
+        {
+            rt_mutex_release(&mutex_order_openCamera, TM_INFINITE);
+            rt_mutex_acquire(&mutex_ack_openCamera,TM_INFINITE);
+            status = Camera.Open();
+            rt_mutex_release(&mutex_ack_openCamera,TM_INFINITE);
+            if (status=1)
+            {
+                msgSend=MESSAGE_CAM_OPEN;
+            }
+            else 
+            {
+                msgSend=MESSAGE_CAM_CLOSE;
+            }
+            rt_mutex_acquire(&mutex_flow_videoIn, TM_INFINITE);
+            Image=Camera.grab();
+            rt_mutex_release(&mutex_flow_videoIn, TM_INFINITE);
+        }
+        if (MESSAGE_CAM_IMAGE == 0){
+            rt_mutex_acquire(&mutex_state_cameraWanted,TM_INFINITE);
+            status =Camera.Close();
+            rt_mutex_release(&mutex_state_cameraWanted,TM_INFINITE);
+            msgSend=MESSAGE_CAM_CLOSE;
+        }
+
+        rt_mutex_acquire(&mutex_flow_videoOut,TM_INFINITE);
+        WriteInQueue(&q_messageToMon, ImageSend);
+        rt_mutex_release(&mutex_flow_videoOut,TM_INFINITE);
+        WriteInQueue(&q_messageToMon, msgSend); // msgSend will be deleted by sendToMon
+    }
+}
+
+/**
  * Write a message in a given queue
  * @param queue Queue identifier
  * @param msg Message to be stored

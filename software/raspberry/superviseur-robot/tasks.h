@@ -84,6 +84,12 @@ private:
     RT_MUTEX mutex_robot;
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
+    RT_MUTEX mutex_ack_openCamera;
+    RT_MUTEX mutex_order_openCamera;
+    RT_MUTEX mutex_flow_videoIn;
+    RT_MUTEX mutex_flow_videoOut;
+    RT_MUTEX mutex_state_cameraWanted;
+
 
     /**********************************************************************/
     /* Semaphores                                                         */
@@ -92,6 +98,8 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    RT_SEM sem_comRobot;
+    RT_SEM sem_stopSendingImage;
 
     /**********************************************************************/
     /* Message queues                                                     */
@@ -131,6 +139,11 @@ private:
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
+
+    /**
+     * @brief Thread opening the communication with the camera.
+     */
+    void ControlCamera(void *arg);
     
     /**********************************************************************/
     /* Queue services                                                     */
