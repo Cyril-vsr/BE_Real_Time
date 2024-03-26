@@ -26,6 +26,8 @@
 #define PRIORITY_TRECEIVEFROMMON 25
 #define PRIORITY_TSTARTROBOT 20
 #define PRIORITY_TCAMERA 21
+#define PRIORITY_TBATTERY 40
+
 
 /*
  * Some remarks:
@@ -343,6 +345,37 @@ void Tasks::StartRobotTask(void *arg) {
             robotStarted = 1;
             rt_mutex_release(&mutex_robotStarted);
         }
+    }
+}
+
+/**
+ * @brief Thread handling battery level check.
+ */
+void Tasks::GetBatteryLevel(void *arg) {
+    cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+    
+    /**************************************************************************************/
+    /* The task GetBatteryLevel starts here                                                    */
+    /**************************************************************************************/
+    
+    rt_task_set_periodic(NULL, TM_NOW, 500000000);
+    
+    while (1) {
+
+        rt_task_wait_period(NULL);
+        
+        MessageBattery * msg; 
+        
+        cout << "Message batterie robot (";    
+        rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+        msg = robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
+        rt_mutex_release(&mutex_robot);
+        cout << msg->GetID();
+        cout << ")" << endl;
+        
+        WriteInQueue(&q_messageToMon, msg);  // msg will be deleted by sendToMon
     }
 }
 
