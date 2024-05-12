@@ -15,4 +15,4 @@ BE for the real time course at INSA
 Link to Diagram : 
 
   Archi Fonctionnelle -> https://app.diagrams.net/#G1cOXsQIVWAtuiLikTjfOiLHGdSUx2KLgQ#%7B%22pageId%22%3A%22awDo0xh2j07cilMKjcz5%22%7D
-  Archi Physique -> 
+  Archi Physique -> https://app.diagrams.net/?src=about#G1YYmCS4k5w57oQEUSIeu96EUCKmsWcYnu#%7B%22pageId%22%3A%22lr50Nq3O_Wpqp5DX5Pws%22%7D
