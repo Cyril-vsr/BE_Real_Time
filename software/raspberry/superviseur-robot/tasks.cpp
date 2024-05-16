@@ -25,8 +25,9 @@
 #define PRIORITY_TSENDTOMON 22
 #define PRIORITY_TRECEIVEFROMMON 25
 #define PRIORITY_TSTARTROBOT 20
-#define PRIORITY_TCAMERA 21
-#define PRIORITY_TBATTERY 40
+#define PRIORITY_TCAMERA 25
+#define PRIORITY_TBATTERY 21
+#define PRIORITY_TARENE 21
 
 
 
@@ -74,10 +75,6 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_mutex_create(&mutex_move, NULL)) {
-        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
-        exit(EXIT_FAILURE);
-    }
-        if (err = rt_mutex_create(&mutex_monitor, NULL)) {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -164,15 +161,15 @@ void Tasks::Init() {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-     if (err = rt_task_create(&th_getBatteryLevel, "th_getBatteryLevel", 0, PRIORITY_TMOVE, 0)) {
+     if (err = rt_task_create(&th_getBatteryLevel, "th_getBatteryLevel", 0, PRIORITY_TBATTERY, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_create(&th_Control_Camera, "th_Control_Camera", 0, PRIORITY_TMOVE, 0)) {
+    if (err = rt_task_create(&th_Control_Camera, "th_Control_Camera", 0, PRIORITY_TCAMERA, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_create(&th_arenaCalibration, "th_arenaCalibration", 0, PRIORITY_TMOVE, 0)) {
+    if (err = rt_task_create(&th_arenaCalibration, "th_arenaCalibration", 0, PRIORITY_TARENE, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -433,7 +430,6 @@ void Tasks::StartRobotTask(void *arg) {
  * @brief Thread handling battery level check.
  */
 void Tasks::GetBatteryLevel(void *arg) {
-    int rs;
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
@@ -445,27 +441,21 @@ void Tasks::GetBatteryLevel(void *arg) {
     rt_task_set_periodic(NULL, TM_NOW, 500000000);
 
     while (1) {
-    rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
-    rs = robotStarted;
-    rt_mutex_release(&mutex_robotStarted);
-        if (rs == 1) 
-        {
 
         rt_task_wait_period(NULL);
 
-        Message* msg; 
+        MessageBattery* msg; 
 
         cout << "Message batterie robot (";    
         rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-        msg = robot.Write(robot.GetBattery());
+        msg = (MessageBattery*)robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
         rt_mutex_release(&mutex_robot);
-        cout << msg->GetID();
         cout << ")" << endl;
 
         WriteInQueue(&q_messageToMon, msg);  // msg will be deleted by sendToMon
         }
-
-    }
+    
+    cout << endl << flush;
     
 }
 
@@ -473,7 +463,7 @@ void Tasks::GetBatteryLevel(void *arg) {
  * @brief Thread handling control of the robot.
  */
 void Tasks::MoveTask(void *arg) {
-    int rs;
+    bool rs;
     int cpMove;
     
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
