@@ -430,6 +430,7 @@ void Tasks::StartRobotTask(void *arg) {
  * @brief Thread handling battery level check.
  */
 void Tasks::GetBatteryLevel(void *arg) {
+    bool rs;
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
@@ -443,9 +444,12 @@ void Tasks::GetBatteryLevel(void *arg) {
     while (1) {
 
         rt_task_wait_period(NULL);
-
+        rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+        rs = robotStarted;
+        rt_mutex_release(&mutex_robotStarted);
+        if (rs == 1) {
         MessageBattery* msg; 
-
+        cout << "RSSSSSSSSSSSSSSSSSSSSSSSSSSSSS"; 
         cout << "Message batterie robot (";    
         rt_mutex_acquire(&mutex_robot, TM_INFINITE);
         msg = (MessageBattery*)robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
@@ -453,6 +457,7 @@ void Tasks::GetBatteryLevel(void *arg) {
         cout << ")" << endl;
 
         WriteInQueue(&q_messageToMon, msg);  // msg will be deleted by sendToMon
+        }
         }
     
     cout << endl << flush;
@@ -576,13 +581,5 @@ void Tasks::ArenaCalibration(void *arg) {
     rt_sem_p(&sem_barrier, TM_INFINITE);
     rt_task_set_periodic(NULL, TM_NOW, 100000000);
     cout << "Start Camera Operating" << endl << flush;
-    while(1)
-    {
-        rt_sem_p(&sem_camOpen, TM_INFINITE);
-        /**************************************************************************************/
-        /* The task starts here                                                               */
-        /**************************************************************************************/
-        
-    }
     
 }
